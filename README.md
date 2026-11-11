@@ -34,3 +34,7 @@ Rode `npm run db:migrate` ao atualizar para uma versão com novas migrações. `
 O catálogo é opcional. Para baixar a base pela primeira vez, use `npm run catalogo` ou abra **Configuração → Catálogo de filamentos** no Carretel. Os dados gerados ficam na instalação. A base vem dos [perfis de filamento do Bambu Studio](https://github.com/bambulab/BambuStudio/tree/a803118282d8208361b4584b720af175dd1a9b4e/resources/profiles/BBL/filament), sob AGPL-3.0.
 
 As fontes Manrope e Unbounded têm seus avisos SIL OFL em [`static/fontes`](static/fontes/). As ilustrações de rolos e impressora desta versão foram geradas com a Higgsfield.
+
+## Licença
+
+O Carretel é gratuito para uso não comercial, sob a [PolyForm Noncommercial 1.0.0](LICENSE.md): você pode usar, estudar, modificar e compartilhar para fins pessoais, de estudo, pesquisa ou em organizações sem fins lucrativos. Uso comercial precisa de autorização do autor.
