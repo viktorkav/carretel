@@ -1,0 +1,47 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Carretel
+# O catálogo de filamentos é GERADO (npm run catalogo), não versionado: ele é
+# derivado dos perfis do Bambu Studio, que são AGPL-3.0. Versionar aqui, ou
+# assar na imagem, seria distribuir o dado — assim o que se distribui é o
+# gerador, e cada instalação busca o seu. Veja Catálogo de filamentos no README.
+catalogo-bambu.json
+catalogo-biblioteca.json
+fixtures/catalogo-preview.json
+
+# Prancha (fotografia de tela; ver prancha.config.js). O padrão amplo pega
+# .prancha-check/ e .prancha-check-2/ (a repetição de `check`) também — os
+# dois guardam HTML completo de todas as telas, e `.prancha/` sozinho não os
+# cobria.
+.prancha*
+
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+/uploads
+.env*
+
+# Ferramental de planejamento (não versionado)
+.superpowers/

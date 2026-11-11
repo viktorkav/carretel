@@ -1,0 +1,29 @@
+--
+-- Duas colunas em `impressao`: qual PLATE rodou e de qual PROJETO ela veio.
+--
+-- Os dois campos chegam no payload da nuvem (`plateIndex` e `designId`) e o
+-- parser os descartava. Sem eles, "MagicTray" quatro vezes é só um nome
+-- repetido, e nome repetido significa mesmo ARQUIVO — não a mesma peça. Com
+-- eles, a mesma plate impressa duas vezes passa a ser comparável, e plates
+-- diferentes do mesmo projeto continuam sendo complementares.
+--
+-- Por que esta migração é segura no banco que está no ar (11 impressões, com
+-- custo congelado e atribuição de rolo feita à mão):
+--
+--  1. É ADITIVA. Dois `ALTER TABLE ... ADD COLUMN`, que no SQLite reescrevem
+--     apenas o cabeçalho da tabela — nenhuma linha é lida, copiada ou
+--     regravada. Nada aqui se parece com a 0002, que teve que recriar `rolo`.
+--  2. As duas são ANULÁVEIS e SEM PADRÃO. Toda linha existente fica com NULL,
+--     que a tela lê como "plate não identificada". Um padrão (mesmo `0`) seria
+--     afirmar que as 11 impressões antigas são todas da mesma plate — a
+--     afirmação exata que este sistema recusa a fazer.
+--  3. Nenhum custo congelado é lido ou escrito. Nenhum recálculo por efeito
+--     colateral, nenhuma coluna de rolo, gramas, duração ou finalidade tocada.
+--
+-- O que preenche as linhas antigas é a ação "completar" da tela de importação,
+-- que busca o histórico e escreve SÓ nestas duas colunas, e só onde estão
+-- vazias. `src/lib/server/migracao-plates.test.ts` prova o item 3 comparando o
+-- banco inteiro antes e depois.
+--
+ALTER TABLE `impressao` ADD `indice_plate` integer;--> statement-breakpoint
+ALTER TABLE `impressao` ADD `projeto_id_nuvem` text;

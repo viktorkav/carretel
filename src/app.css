@@ -1,0 +1,4126 @@
+/*
+ * Carretel — folha única do produto (D).
+ *
+ * A ideia que organiza tudo: o Carretel é feito dos objetos que controla.
+ *
+ *  - O rolo e a peça são IMAGEM (render de produto, na cor cadastrada). O que
+ *    é objeto fica solto sobre o fundo de estúdio, sem moldura de cartão.
+ *  - A interface é do mesmo plástico preto do carretel: a doca de navegação e a
+ *    ação principal. Não existe "cor da marca" disputando com o filamento.
+ *  - Cor, nesta tela, quer dizer filamento. As outras três matizes são aviso
+ *    (acabando, umidade) e resultado (falha), sempre com ícone e palavra.
+ *  - Folha branca só onde se escreve ou se lê tabela: formulário, período,
+ *    detalhe. O resto não precisa de caixa.
+ *  - Ícones: contorno é ferramenta, sólido é plástico (ver `$lib/icones`).
+ *
+ * Ordem: 1 tokens · 2 base · 3 casca (doca + palco) · 4 cabeçalhos · 5 ações ·
+ * 6 formulários · 7 tabelas · 8 folhas e miúdos · 9 estados e medidas ·
+ * 10 objetos (rolo, peça, etiqueta, avisos) · 11 Início · 12 Filamentos ·
+ * 13 Impressões · 14 Registrar e resultado · 15 Impressoras, Importar,
+ * Configurações · 16 cadastro de filamento · 17 telas estreitas.
+ */
+
+/* ── 1. Tokens ─────────────────────────────────────────────────────────── */
+
+@font-face {
+	font-family: 'Unbounded';
+	src: url('/fontes/unbounded-latin-wght.woff2') format('woff2');
+	font-weight: 200 900;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Manrope';
+	src: url('/fontes/manrope-latin-wght.woff2') format('woff2');
+	font-weight: 200 800;
+	font-style: normal;
+	font-display: swap;
+}
+
+:root {
+	color-scheme: light;
+
+	/* matéria: o plástico do carretel, o fundo de estúdio, a folha */
+	--plastico: #17181a;
+	--plastico-2: #2a2c30;
+	--plastico-3: #3d4046;
+	--sobre-plastico: #ffffff;
+	--sobre-plastico-2: #b7bbc1;
+	--estudio: #e9ebee;
+	--estudio-2: #dfe2e6;
+	--estudio-3: #d0d4d9;
+	--folha: #ffffff;
+
+	/* tinta: três degraus, todos legíveis sobre estúdio e sobre folha */
+	--tinta: #17181a;
+	--tinta-2: #454950;
+	--tinta-3: #60646c;
+
+	/* linhas: a que divide, a suave de dentro da folha, a de contorno de controle */
+	--linha: #d3d7dc;
+	--linha-suave: #e7e9ed;
+	--linha-forte: #8d939b;
+
+	/* avisos e resultados: sempre com ícone e palavra ao lado */
+	--baixo: #8a4a00;
+	--baixo-fundo: #fbe6c1;
+	--baixo-linha: #e7b566;
+	--umido: #0b5c85;
+	--umido-fundo: #d6ecf8;
+	--umido-linha: #8cc4e3;
+	--ok: #17693a;
+	--ok-fundo: #d8efe0;
+	--falha: #a3231c;
+	--falha-fundo: #fbdfdc;
+
+	/* a cor de um rolo sem cor cadastrada: cinza de plástico cru */
+	--fio-sem-cor: #b9bec5;
+
+	/* vozes: a dos números e títulos (larga, de traço redondo como o fio) e a de leitura */
+	--voz-numero: 'Unbounded', 'Manrope', system-ui, sans-serif;
+	--voz: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+	--raio-miudo: 8px;
+	--raio: 12px;
+	--raio-folha: 20px;
+	--altura: 42px;
+	--doca: 92px;
+	--toque: 130ms;
+	--foco: var(--plastico);
+
+	/* nomes da folha anterior, mantidos para as telas que não mudaram de marcação */
+	--papel: var(--estudio);
+	--superficie: var(--folha);
+	--rebaixo: var(--estudio-2);
+	--acento: var(--plastico);
+	--acento-forte: #000000;
+	--acento-fundo: #eef0f3;
+	--sobre-acento: #ffffff;
+	--atencao: var(--baixo);
+	--atencao-fundo: var(--baixo-fundo);
+	--atencao-linha: var(--baixo-linha);
+	--raio-painel: var(--raio-folha);
+	--voz-codigo: var(--voz);
+	--voz-titulo: var(--voz-numero);
+	--fin-estudio: var(--tinta);
+	--fin-homelab: var(--tinta);
+	--fin-conteudo: var(--tinta);
+	--fin-pessoal: var(--tinta);
+	--fin-outro: var(--tinta-3);
+}
+
+/* ── 2. Base ───────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+* {
+	margin: 0;
+}
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+body {
+	min-height: 100vh;
+	background: var(--estudio);
+	color: var(--tinta);
+	font-family: var(--voz);
+	font-size: 15px;
+	font-weight: 500;
+	line-height: 1.5;
+	font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3 {
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+}
+h1 {
+	font-family: var(--voz-numero);
+	font-size: 26px;
+	font-weight: 600;
+	letter-spacing: -0.03em;
+	line-height: 1.15;
+}
+h2 {
+	font-size: 17px;
+	font-weight: 800;
+}
+h3 {
+	font-size: 15px;
+	font-weight: 800;
+}
+p {
+	max-width: 72ch;
+}
+a {
+	color: var(--tinta);
+	text-decoration-thickness: 1.5px;
+	text-underline-offset: 3px;
+}
+a:hover {
+	text-decoration-thickness: 2.5px;
+}
+strong,
+b {
+	font-weight: 800;
+}
+small {
+	font-size: 13px;
+	line-height: 1.4;
+}
+img,
+canvas,
+svg {
+	max-width: 100%;
+}
+ul,
+ol {
+	padding: 0;
+}
+hr {
+	border: 0;
+	border-top: 1px solid var(--linha-suave);
+}
+button {
+	font: inherit;
+	color: inherit;
+}
+noscript p {
+	margin-top: 12px;
+}
+
+:focus-visible {
+	outline: 2.5px solid var(--foco);
+	outline-offset: 2px;
+	border-radius: 6px;
+}
+[tabindex='-1']:focus {
+	outline: none;
+}
+
+/* Só para leitor de tela: o texto existe, a caixa não. */
+.so-leitor {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+	clip-path: inset(50%);
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.pular-conteudo {
+	position: fixed;
+	top: -80px;
+	left: calc(var(--doca) + 28px);
+	z-index: 100;
+	padding: 10px 16px;
+	border-radius: var(--raio);
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+	font-weight: 700;
+	text-decoration: none;
+}
+.pular-conteudo:focus {
+	top: 12px;
+	color: var(--sobre-plastico);
+}
+
+/* A família de ícones (ver `$lib/icones`). */
+.icone {
+	flex: none;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.75;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vertical-align: -0.2em;
+}
+.icone .m {
+	fill: var(--icone-material, currentColor);
+	stroke: none;
+}
+.icone[width='16'],
+.icone[width='14'] {
+	stroke-width: 2;
+}
+
+/* A voz dos números: gramas, reais, horas. */
+.num {
+	font-family: var(--voz-numero);
+	font-weight: 600;
+	letter-spacing: -0.03em;
+}
+
+/* ── 3. Casca: doca e palco ────────────────────────────────────────────── */
+
+.app {
+	min-height: 100vh;
+	padding-left: calc(var(--doca) + 24px);
+}
+
+/*
+ * A doca é do plástico do carretel. No computador fica de pé, à esquerda; no
+ * celular deita embaixo, com a ação de registrar no meio. É o mesmo desenho
+ * de item (ícone em cima, nome embaixo) nos dois.
+ */
+.doca {
+	--foco: #ffffff;
+	position: fixed;
+	z-index: 40;
+	left: 12px;
+	top: 12px;
+	bottom: 12px;
+	width: var(--doca);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 16px 7px 10px;
+	border-radius: 30px;
+	background: var(--plastico);
+	color: var(--sobre-plastico-2);
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+.doca::-webkit-scrollbar {
+	display: none;
+}
+.doca a {
+	color: inherit;
+	text-decoration: none;
+}
+.doca__marca {
+	display: grid;
+	place-items: center;
+	height: 44px;
+	margin-bottom: 10px;
+	border-radius: 16px;
+	color: var(--sobre-plastico);
+}
+.doca .doca__marca {
+	color: var(--sobre-plastico);
+}
+.doca__registrar {
+	display: grid;
+	justify-items: center;
+	gap: 7px;
+	padding: 4px 0 10px;
+	border-radius: 18px;
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1.25;
+	text-align: center;
+}
+.doca .doca__registrar {
+	color: var(--sobre-plastico);
+}
+.doca__botao {
+	display: grid;
+	place-items: center;
+	width: 52px;
+	height: 52px;
+	border-radius: 18px;
+	background: var(--sobre-plastico);
+	color: var(--plastico);
+	transition: transform var(--toque);
+}
+.doca__registrar:hover .doca__botao {
+	transform: scale(1.05);
+}
+.doca__registrar:active .doca__botao {
+	transform: scale(0.97);
+}
+.doca__botao .icone {
+	stroke-width: 2.4;
+}
+/* já na tela de registro: o botão não é ação, é "você está aqui" */
+.doca__registrar[aria-current='page'] .doca__botao {
+	background: none;
+	box-shadow: inset 0 0 0 2px var(--sobre-plastico);
+	color: var(--sobre-plastico);
+}
+.doca__nav {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-top: 8px;
+}
+.doca__item {
+	display: grid;
+	justify-items: center;
+	gap: 4px;
+	padding: 9px 2px 8px;
+	border: 0;
+	border-radius: 16px;
+	background: none;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-align: center;
+	cursor: pointer;
+	transition: background-color var(--toque), color var(--toque);
+}
+.doca__item:hover {
+	background: color-mix(in srgb, var(--plastico-2) 70%, transparent);
+	color: var(--sobre-plastico);
+}
+.doca .doca__item[aria-current='page'],
+.doca__mais--atual > .doca__item {
+	background: var(--plastico-2);
+	color: var(--sobre-plastico);
+	font-weight: 700;
+}
+.doca__item--fim {
+	margin-top: auto;
+}
+.doca__mais,
+.so-estreito {
+	display: none;
+}
+
+.palco {
+	min-width: 0;
+	width: 100%;
+	max-width: 1340px;
+	padding: 26px 32px 64px 12px;
+}
+.palco > * + * {
+	margin-top: 24px;
+}
+
+/* ── 4. Cabeçalhos de página ───────────────────────────────────────────── */
+
+/* O topo de uma tela: o nome dela, o dado que a resume e as ações dela. Uma linha. */
+.topo,
+.secao__cabeca {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 20px;
+	min-height: 44px;
+}
+.topo__dado {
+	color: var(--tinta-3);
+	font-size: 14px;
+	font-weight: 600;
+}
+.topo__acoes {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin-left: auto;
+}
+.secao {
+	display: grid;
+	gap: 12px;
+}
+.secao__cabeca {
+	justify-content: space-between;
+}
+.secao__deck,
+.cadastro-cabecalho p {
+	color: var(--tinta-2);
+}
+.crt-atalho {
+	flex: none;
+}
+.cadastro-cabecalho {
+	display: grid;
+	gap: 4px;
+}
+/* o caminho de volta, em cima do título */
+.voltar,
+.cadastro-cabecalho > a {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	justify-self: start;
+	min-height: 32px;
+	margin-bottom: 2px;
+	color: var(--tinta-2);
+	font-size: 13.5px;
+	font-weight: 700;
+	text-decoration: none;
+}
+.voltar:hover,
+.cadastro-cabecalho > a:hover {
+	color: var(--tinta);
+	text-decoration: underline;
+}
+.stage-head {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 6px 14px;
+}
+.stage-head .sub {
+	font-size: 13.5px;
+	color: var(--tinta-3);
+}
+
+/* O retorno de uma ação: o que acabou de acontecer, dito uma vez. */
+.retorno {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: none;
+	padding: 10px 14px;
+	border-radius: var(--raio);
+	background: var(--ok-fundo);
+	color: var(--ok);
+	font-size: 14.5px;
+	font-weight: 700;
+}
+.retorno--falha {
+	background: var(--falha-fundo);
+	color: var(--falha);
+}
+
+/*
+	Com script, a recusa que marca um campo é dita no campo — o foco vai para
+	lá, e a mensagem está logo abaixo dele. A faixa do topo fica para a recusa
+	que não tem campo a marcar e para quem está sem script, que chega pelo topo.
+*/
+html[data-js] .palco:has([aria-invalid='true']) > .retorno--falha {
+	display: none;
+}
+.retorno[tabindex='-1']:focus {
+	outline: none;
+}
+.retorno[tabindex='-1']:focus-visible {
+	outline: 2px solid var(--foco);
+	outline-offset: 2px;
+}
+
+/* ── 5. Ações ──────────────────────────────────────────────────────────── */
+
+/*
+ * Três papéis, três desenhos:
+ *  - principal (`--sinal`): cheia, do plástico. Uma por tela, ou por folha.
+ *  - secundária (o padrão): folha branca com contorno.
+ *  - discreta (`--fantasma`): só o texto e o ícone; para "ver todos", "fechar".
+ * Onde a ação tem objeto, o rótulo diz o verbo e o objeto ("Registrar secagem").
+ */
+.acao {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: var(--altura);
+	padding: 0 16px;
+	border: 1px solid var(--linha-forte);
+	border-radius: var(--raio);
+	background: var(--folha);
+	color: var(--tinta);
+	font-family: var(--voz);
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: background-color var(--toque), border-color var(--toque), color var(--toque);
+}
+.acao:hover {
+	border-color: var(--tinta);
+	background: var(--folha);
+	color: var(--tinta);
+	text-decoration: none;
+}
+.acao:active {
+	background: var(--estudio-2);
+}
+.acao--sinal {
+	border-color: var(--plastico);
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+.acao--sinal:hover {
+	border-color: #000;
+	background: #000;
+	color: var(--sobre-plastico);
+}
+.acao--sinal:active {
+	background: var(--plastico-3);
+}
+.acao--fantasma {
+	border-color: transparent;
+	background: none;
+	padding: 0 10px;
+}
+.acao--fantasma:hover {
+	border-color: transparent;
+	background: var(--estudio-2);
+}
+.acao--perigo {
+	color: var(--falha);
+	border-color: color-mix(in srgb, var(--falha) 50%, var(--linha-forte));
+}
+.acao--perigo:hover {
+	border-color: var(--falha);
+	background: var(--falha-fundo);
+	color: var(--falha);
+}
+.acao--miuda,
+.acao--capsula {
+	min-height: 34px;
+	padding: 0 12px;
+	border-radius: 10px;
+	font-size: 13px;
+}
+.acao--grande {
+	min-height: 50px;
+	padding: 0 24px;
+	border-radius: 14px;
+	font-size: 15px;
+}
+/* só ícone: sempre com nome acessível no próprio elemento */
+.acao--icone {
+	width: var(--altura);
+	padding: 0;
+}
+.acao--icone.acao--miuda {
+	width: 34px;
+}
+.acao:disabled,
+.acao[aria-disabled='true'] {
+	border-color: var(--linha);
+	background: var(--estudio-2);
+	color: var(--tinta-3);
+	cursor: not-allowed;
+}
+form[aria-busy='true'] {
+	cursor: progress;
+}
+
+.crt-link {
+	color: var(--tinta);
+	font-weight: 700;
+	text-decoration: underline;
+	text-decoration-thickness: 1.5px;
+	text-underline-offset: 3px;
+}
+
+/*
+ * A escolha segmentada: um trilho rebaixado e a opção atual em plástico. É
+ * escolha, não comando — e por isso mora colada no conteúdo que ela troca.
+ */
+.chips,
+.segmentos,
+.crt-visao {
+	display: inline-flex;
+	gap: 2px;
+	padding: 3px;
+	border-radius: var(--raio);
+	background: var(--estudio-2);
+}
+.chips > a,
+.segmentos > a,
+.crt-visao-item {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 34px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 9px;
+	background: none;
+	color: var(--tinta-2);
+	font-size: 13.5px;
+	font-weight: 700;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: background-color var(--toque), color var(--toque);
+}
+.chips > a:hover,
+.segmentos > a:hover,
+.crt-visao-item:hover {
+	background: var(--estudio-3);
+	color: var(--tinta);
+}
+.chips > a[aria-current],
+.segmentos > a[aria-current],
+.crt-visao-item[aria-current] {
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+
+.chip,
+.crt-capsula {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 9px;
+	border-radius: var(--raio-miudo);
+	background: var(--estudio-2);
+	color: var(--tinta-2);
+	font-size: 12.5px;
+	font-weight: 700;
+	line-height: 20px;
+	white-space: nowrap;
+}
+
+/* ── 6. Formulários ────────────────────────────────────────────────────── */
+
+label {
+	color: var(--tinta);
+}
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input[type='url'],
+input[type='search'],
+input[type='email'],
+input[type='datetime-local'],
+input[type='date'],
+input[type='time'],
+select,
+textarea {
+	display: block;
+	width: 100%;
+	min-height: 44px;
+	padding: 9px 13px;
+	border: 1px solid var(--linha-forte);
+	border-radius: var(--raio);
+	background: var(--folha);
+	color: var(--tinta);
+	font-family: var(--voz);
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 22px;
+	font-variant-numeric: tabular-nums;
+	transition: border-color var(--toque), box-shadow var(--toque);
+}
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+	border-color: var(--tinta);
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+	outline: none;
+	border-color: var(--tinta);
+	box-shadow: 0 0 0 2px var(--folha), 0 0 0 4.5px var(--tinta);
+	border-radius: var(--raio);
+}
+input:disabled,
+select:disabled,
+textarea:disabled {
+	border-color: var(--linha);
+	background: var(--estudio-2);
+	color: var(--tinta-3);
+	cursor: not-allowed;
+}
+textarea {
+	min-height: 80px;
+	resize: vertical;
+}
+select {
+	appearance: none;
+	padding-right: 38px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2317181a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.5 6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+}
+::placeholder {
+	color: var(--tinta-3);
+	font-weight: 500;
+	opacity: 1;
+}
+input[type='search'] {
+	padding-left: 40px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2360646c' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='10.75' cy='10.75' r='6.5'/%3E%3Cpath d='M15.75 15.75 20.25 20.25'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: 13px center;
+}
+input[type='checkbox'],
+input[type='radio'] {
+	width: 20px;
+	height: 20px;
+	flex: none;
+	margin: 0;
+	accent-color: var(--plastico);
+	cursor: pointer;
+}
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+	border-color: var(--falha);
+	box-shadow: 0 0 0 1px var(--falha);
+}
+
+.crt-campo {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+.crt-campo--largo {
+	min-width: min(300px, 100%);
+}
+.rotulo,
+.crt-campo > label {
+	display: block;
+	color: var(--tinta-2);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.3;
+}
+/* os rótulos curtos do código vêm em caixa baixa; na tela a frase começa com maiúscula */
+.rotulo::first-letter,
+.crt-campo > label::first-letter,
+th::first-letter,
+.medida__nome::first-letter {
+	text-transform: uppercase;
+}
+h3.rotulo {
+	color: var(--tinta);
+	font-size: 15px;
+	font-weight: 800;
+}
+.metadado {
+	color: var(--tinta);
+	font-size: 15px;
+	font-weight: 600;
+}
+.secundaria,
+.fraca {
+	color: var(--tinta-3);
+	font-weight: 500;
+}
+.crt-dica,
+.nota {
+	color: var(--tinta-3);
+	font-size: 13px;
+	line-height: 1.5;
+}
+.crt-erro {
+	color: var(--falha);
+	font-size: 13.5px;
+	font-weight: 700;
+}
+.cadastro-erro {
+	display: block;
+	padding: 10px 14px;
+	border-radius: var(--raio);
+	background: var(--falha-fundo);
+	color: var(--falha);
+	font-size: 14px;
+	font-weight: 700;
+}
+.crt-opcao {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.crt-opcao input {
+	margin-top: 1px;
+}
+.crt-opcao small {
+	display: block;
+	margin-top: 2px;
+	font-weight: 500;
+}
+.crt-grade {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(var(--crt-min, 150px), 100%), var(--crt-max, 1fr)));
+	gap: 16px 18px;
+}
+.crt-acoes {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 10px;
+}
+.crt-acoes > .crt-dica {
+	align-self: center;
+}
+.crt-alvo {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	min-height: 28px;
+	cursor: pointer;
+}
+
+/* os rótulos que embrulham o próprio campo (cadastro e registro) */
+.registro label,
+.cadastro-campos label,
+.cadastro-detalhes label,
+.cadastro-busca,
+.estoque-cabecalho label,
+.campo,
+noscript form label {
+	display: grid;
+	align-content: start;
+	align-self: start;
+	gap: 6px;
+	color: var(--tinta-2);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.3;
+}
+.registro label small,
+.cadastro-campos label small,
+.campo small {
+	color: var(--tinta-3);
+	font-weight: 500;
+}
+
+details > summary {
+	cursor: pointer;
+}
+.detalhes-rolo > summary,
+.cadastro-detalhes > summary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	list-style: none;
+}
+.detalhes-rolo > summary::-webkit-details-marker,
+.cadastro-detalhes > summary::-webkit-details-marker {
+	display: none;
+}
+.detalhes-rolo > summary::after,
+.cadastro-detalhes > summary::after {
+	content: '';
+	flex: none;
+	width: 18px;
+	height: 18px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.5 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.5 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+	transition: transform var(--toque);
+}
+.detalhes-rolo[open] > summary::after,
+.cadastro-detalhes[open] > summary::after {
+	transform: rotate(180deg);
+}
+.detalhes-rolo,
+.cadastro-detalhes {
+	border-top: 1px solid var(--linha-suave);
+}
+.detalhes-rolo > summary,
+.cadastro-detalhes > summary,
+.cadastro-maquina > summary {
+	padding: 13px 0;
+	color: var(--tinta);
+	font-size: 14px;
+	font-weight: 700;
+}
+.detalhes-rolo[open],
+.cadastro-detalhes[open] {
+	padding-bottom: 16px;
+}
+.cadastro-detalhes > * + *,
+.detalhes-rolo > * + * {
+	margin-top: 14px;
+}
+.cadastro-maquina > summary {
+	padding: 0;
+	font-size: 16px;
+	font-weight: 800;
+}
+.cadastro-maquina[open] > summary {
+	margin-bottom: 16px;
+}
+
+/* ── 7. Tabelas ────────────────────────────────────────────────────────── */
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+th {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--linha);
+	color: var(--tinta-3);
+	font-size: 12.5px;
+	font-weight: 700;
+	text-align: left;
+	white-space: nowrap;
+}
+td {
+	padding: 11px 12px;
+	border-bottom: 1px solid var(--linha-suave);
+	font-size: 14px;
+	vertical-align: middle;
+}
+tbody tr:last-child td {
+	border-bottom: 0;
+}
+tbody tr:hover td {
+	background: color-mix(in srgb, var(--estudio) 55%, transparent);
+}
+td small {
+	display: block;
+	color: var(--tinta-3);
+}
+td .metadado,
+td.metadado {
+	font-size: 14px;
+}
+.crt-num {
+	text-align: right;
+	white-space: nowrap;
+}
+.crt-rolagem {
+	overflow-x: auto;
+}
+.crt-rolagem table {
+	min-width: 560px;
+}
+.crt-rolagem th:first-child,
+.crt-rolagem td:first-child {
+	padding-left: 0;
+}
+.crt-rolagem th:last-child,
+.crt-rolagem td:last-child {
+	padding-right: 0;
+}
+.crt-rolagem td select,
+.crt-rolagem th select {
+	width: auto;
+	min-width: 150px;
+}
+#historico-filamentos table {
+	min-width: 820px;
+}
+
+/* ── 8. Folhas e miúdos ────────────────────────────────────────────────── */
+
+/* A folha: onde se escreve e onde se lê tabela. Branca, sem contorno, raio largo. */
+.painel,
+.folha {
+	padding: 22px 24px 24px;
+	border-radius: var(--raio-folha);
+	background: var(--folha);
+}
+.painel > * + *,
+.folha > * + * {
+	margin-top: 16px;
+}
+.painel__cabeca {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 6px 20px;
+}
+.painel__nome {
+	font-size: 17px;
+	font-weight: 800;
+}
+.painel__nota {
+	color: var(--tinta-3);
+	font-size: 13px;
+}
+.painel__cabeca-nota {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+}
+.separador {
+	margin: 0;
+}
+.crt-corpo > * + * {
+	margin-top: 14px;
+}
+.crt-vazio,
+.vazio-estado {
+	display: grid;
+	justify-items: center;
+	gap: 10px;
+	max-width: none;
+	padding: 28px 12px;
+	color: var(--tinta-2);
+	text-align: center;
+}
+.vazio-estado .icone {
+	color: var(--tinta-3);
+}
+.crt-marcas {
+	display: grid;
+	gap: 6px;
+	justify-items: start;
+}
+.crt-bloco {
+	margin: 0;
+}
+.crt-filtro {
+	padding-bottom: 4px;
+}
+.crt-paginas {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding-top: 14px;
+	border-top: 1px solid var(--linha-suave);
+}
+.crt-paginas .metadado {
+	margin-inline: auto;
+	color: var(--tinta-2);
+	font-size: 13.5px;
+}
+.crt-lista {
+	list-style: none;
+	display: grid;
+	max-height: 320px;
+	overflow-y: auto;
+	border: 1px solid var(--linha);
+	border-radius: var(--raio);
+}
+.crt-lista li + li {
+	border-top: 1px solid var(--linha-suave);
+}
+.crt-lista-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 42px;
+	padding: 6px 12px;
+	color: var(--tinta);
+	font-size: 14px;
+	text-decoration: none;
+}
+.crt-lista-item:hover {
+	background: var(--estudio);
+}
+.crt-lista-item[aria-current] {
+	background: var(--acento-fundo);
+	box-shadow: inset 3px 0 0 var(--plastico);
+	font-weight: 800;
+}
+.crt-lista-item .crt-capsula {
+	flex: none;
+	margin-left: auto;
+}
+/* o rodapé de cada tela: a conta dela em uma linha */
+.resumo-pagina {
+	max-width: none;
+	padding-top: 16px;
+	border-top: 1px solid var(--linha);
+	color: var(--tinta-3);
+	font-size: 13px;
+}
+
+/* ── 9. Estados e medidas ──────────────────────────────────────────────── */
+
+/* O estado de uma coisa: um ícone e a palavra. A cor acompanha, nunca vai sozinha. */
+.marca {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--tinta);
+	font-size: 14px;
+	font-weight: 600;
+}
+.marca .icone {
+	color: var(--tinta-3);
+}
+.marca--ok,
+.marca--ok .icone {
+	color: var(--ok);
+}
+.marca--atencao,
+.marca--atencao .icone {
+	color: var(--baixo);
+}
+.marca--falha,
+.marca--falha .icone {
+	color: var(--falha);
+}
+.secao > .marca {
+	justify-self: start;
+	padding: 9px 14px;
+	border-radius: var(--raio);
+	background: var(--folha);
+	font-weight: 700;
+}
+.secao > .marca--ok {
+	background: var(--ok-fundo);
+}
+.secao > .marca--atencao {
+	background: var(--baixo-fundo);
+}
+.secao > .marca--falha {
+	background: var(--falha-fundo);
+}
+
+/* barra: sempre irmã de um texto que escreve o valor E o denominador */
+.barra,
+.medida__trilho {
+	display: block;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--estudio-2);
+	overflow: hidden;
+}
+.barra > span,
+.medida__barra {
+	display: block;
+	height: 100%;
+	border-radius: 3px;
+	background: var(--plastico);
+}
+.medida {
+	display: grid;
+	grid-template-columns: minmax(90px, 1fr) minmax(120px, 3fr) auto;
+	align-items: center;
+	gap: 6px 14px;
+}
+.medida__nome {
+	display: block;
+	color: var(--tinta-2);
+	font-size: 14px;
+}
+.medida__valor {
+	font-size: 14px;
+	font-weight: 700;
+	text-align: right;
+	white-space: nowrap;
+}
+.crt-medidas {
+	display: grid;
+	grid-template-columns: minmax(90px, 1fr) minmax(120px, 3fr) auto;
+	gap: 10px 14px;
+}
+.crt-medidas > .medida {
+	grid-column: 1 / -1;
+	grid-template-columns: subgrid;
+}
+.cota {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: none;
+	color: var(--tinta-3);
+	font-size: 13px;
+}
+.cota__fio {
+	flex: 1;
+	height: 1px;
+	background: var(--linha-forte);
+}
+.cota__marca {
+	width: 1px;
+	height: 9px;
+	background: var(--linha-forte);
+}
+.cota__rotulo {
+	white-space: nowrap;
+}
+.crt-tolerancia {
+	display: grid;
+	grid-template-columns: minmax(90px, 1fr) minmax(120px, 3fr) auto;
+	align-items: center;
+	gap: 6px 14px;
+}
+.crt-tolerancia .nome {
+	color: var(--tinta-2);
+	font-size: 14px;
+}
+.crt-tolerancia .trilho {
+	position: relative;
+	height: 12px;
+	border-radius: 3px;
+	background: var(--estudio-2);
+	overflow: hidden;
+}
+.crt-tolerancia .faixa {
+	position: absolute;
+	inset: 0 25%;
+	background: var(--estudio-3);
+}
+.crt-tolerancia .ponteiro {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	margin-left: -1px;
+	background: var(--tinta);
+}
+.crt-tolerancia .valor {
+	font-size: 14px;
+	text-align: right;
+}
+.marca__nome {
+	display: inline-block;
+}
+.marca__nome::first-letter {
+	text-transform: uppercase;
+}
+
+/* ── 10. Objetos: rolo, peça, etiqueta, avisos ─────────────────────────── */
+
+/*
+ * A figura do rolo (ver `FiguraRolo.svelte`). O corpo é o carretel; o fio é
+ * pintado com a cor do dado e recebe o mapa de luz por cima, em hard-light.
+ * O grupo é isolado para a mistura não vazar para o que está atrás.
+ */
+.rolo-fig {
+	--cor: var(--fio-sem-cor);
+	position: relative;
+	display: block;
+	aspect-ratio: 1;
+	isolation: isolate;
+}
+.rolo-fig img {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.rolo-fig__fio {
+	position: absolute;
+	inset: 0;
+	background: var(--cor);
+	-webkit-mask: var(--mapa) center / 100% 100% no-repeat;
+	mask: var(--mapa) center / 100% 100% no-repeat;
+}
+.rolo-fig__fio img {
+	mix-blend-mode: hard-light;
+}
+/* a sombra de contato: o rolo está pousado, não flutuando */
+.rolo-fig::after {
+	content: '';
+	position: absolute;
+	z-index: -1;
+	left: 12%;
+	right: 12%;
+	bottom: 0.5%;
+	height: 7%;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, rgb(23 24 26 / 0.3), transparent);
+}
+
+/* O que está escrito no carretel: o código do rolo, com cara de etiqueta colada. */
+.etiqueta,
+.codigo {
+	display: inline-block;
+	padding: 1px 7px;
+	border-radius: 5px;
+	background: var(--folha);
+	box-shadow: inset 0 0 0 1px var(--linha);
+	color: var(--tinta-2);
+	font-family: var(--voz);
+	font-size: 11.5px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	line-height: 18px;
+	white-space: nowrap;
+	vertical-align: 1px;
+}
+
+/* O filamento citado numa linha: carretelzinho na cor do dado + nome. */
+/* A marca do rolo encerrado: segunda linha, quieta, sob o chip. */
+.encerrado-marca {
+	display: block;
+	margin: 2px 0 0 26px;
+	font-size: 13px;
+}
+.fio-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	color: var(--tinta);
+	font-size: 14px;
+	font-weight: 500;
+}
+.fio-chip .icone {
+	color: var(--tinta);
+}
+
+/* amostras de cor herdadas (catálogo, seletores antigos): viram disco com aba, como o rolo */
+.amostra,
+.crt-amostra,
+.bolinha-filamento,
+.cadastro-ponto,
+.peca-filamento i {
+	display: inline-block;
+	flex: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 2.5px solid var(--plastico);
+	vertical-align: -3px;
+}
+.cadastro-ponto {
+	margin-right: 8px;
+}
+.chip--plastico {
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+
+/*
+ * O aviso preso ao rolo: ícone + palavra, e é um botão. Abre o balão com o
+ * porquê e a ação. Duas matizes só: âmbar para "acabando", azul para umidade.
+ */
+.aviso {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	min-height: 26px;
+	padding: 2px 9px 2px 7px;
+	border: 0;
+	border-radius: var(--raio-miudo);
+	font-family: var(--voz);
+	font-size: 12.5px;
+	font-weight: 800;
+	line-height: 1.2;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: box-shadow var(--toque);
+}
+.aviso--acabando {
+	background: var(--baixo-fundo);
+	color: var(--baixo);
+}
+.aviso--umidade {
+	background: var(--umido-fundo);
+	color: var(--umido);
+}
+.aviso:hover {
+	box-shadow: inset 0 0 0 1.5px currentColor;
+}
+.aviso-texto {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: 800;
+}
+.aviso-texto--acabando {
+	color: var(--baixo);
+}
+.aviso-texto--umidade {
+	color: var(--umido);
+}
+
+/* O balão: nasce centrado (sem script) e o script o encosta no botão que o abriu. */
+.balao {
+	position: fixed;
+	inset: 0;
+	width: min(330px, calc(100vw - 24px));
+	height: fit-content;
+	margin: auto;
+	padding: 16px 16px 14px;
+	border: 0;
+	border-radius: 18px;
+	background: var(--folha);
+	color: var(--tinta);
+	box-shadow: 0 0 0 1px var(--linha), 0 14px 44px rgb(23 24 26 / 0.24);
+	font-size: 14px;
+}
+.balao[data-ancora='botao'] {
+	inset: auto;
+	margin: 0;
+}
+.balao[data-ancora='pe'] {
+	inset: auto 10px calc(10px + env(safe-area-inset-bottom)) 10px;
+	width: auto;
+	margin: 0;
+}
+.balao::backdrop {
+	background: rgb(23 24 26 / 0.18);
+}
+.balao[data-ancora='botao']::backdrop {
+	background: transparent;
+}
+.balao > * + * {
+	margin-top: 8px;
+}
+.balao__titulo {
+	font-size: 15px;
+}
+.balao__acoes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 14px;
+}
+/* no balão a ação é o que se veio fazer: tamanho de dedo, mesmo sendo "miúda" no resto da tela */
+.balao__acoes .acao {
+	min-height: 40px;
+}
+
+/* A peça, pequena: capa do registro ou o bloco tracejado de "sem imagem". */
+.peca-mini {
+	position: relative;
+	display: block;
+	flex: none;
+	width: 52px;
+	aspect-ratio: 1;
+	border-radius: var(--raio);
+	background: var(--estudio);
+	overflow: hidden;
+}
+.peca-mini--vazia {
+	display: grid;
+	place-items: center;
+	color: var(--tinta-3);
+}
+.render-peca {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	background: var(--estudio);
+}
+.render-peca > img,
+.render-peca > canvas {
+	position: absolute;
+	inset: 6%;
+	display: block;
+	width: 88%;
+	height: 88%;
+	object-fit: contain;
+}
+.render-peca.render-peca--clara,
+.peca-cartao__figura.render-peca--clara,
+.peca__figura.render-peca--clara {
+	background: var(--estudio-3);
+}
+.render-peca__ausente {
+	display: grid;
+	place-items: center;
+	align-content: center;
+	gap: 8px;
+	height: 100%;
+	color: var(--tinta-3);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+
+/* ── 11. Início ────────────────────────────────────────────────────────── */
+
+/*
+ * Duas coisas de tempos diferentes, e o desenho é que diz isso: o estoque são
+ * objetos soltos no estúdio (é o que há AGORA); o período é uma folha com o
+ * próprio seletor em cima (é o que a folha mostra que muda com ele).
+ */
+.inicio {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+	align-items: start;
+	gap: 36px;
+}
+.inicio__estoque {
+	display: grid;
+	gap: 18px;
+	min-width: 0;
+}
+.titulo-grande {
+	font-family: var(--voz-numero);
+	font-size: 26px;
+	font-weight: 600;
+	letter-spacing: -0.03em;
+	line-height: 1.15;
+}
+
+/* A prateleira: os rolos de pé sobre uma linha, a legenda de cada um embaixo. */
+.prateleira {
+	list-style: none;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
+	gap: 30px 0;
+}
+.rolo-item {
+	display: grid;
+	align-content: start;
+	gap: 10px;
+	min-width: 0;
+	padding-right: 20px;
+}
+.rolo-item__abrir {
+	display: grid;
+	gap: 2px;
+	color: var(--tinta);
+	text-decoration: none;
+	border-radius: var(--raio);
+}
+.rolo-item__abrir:hover {
+	text-decoration: none;
+}
+.rolo-item__abrir .rolo-fig {
+	width: min(100%, 216px);
+	margin-bottom: 12px;
+	transition: transform 180ms ease;
+	transform-origin: 50% 96%;
+}
+/* a tábua da prateleira: uma linha contínua sob a fileira de rolos */
+.rolo-item__abrir::before {
+	content: '';
+	grid-row: 2;
+	height: 2px;
+	margin: -12px -20px 12px 0;
+	border-radius: 1px;
+	background: var(--estudio-3);
+}
+.rolo-item__abrir .rolo-fig {
+	grid-row: 1;
+}
+.rolo-item__abrir:hover .rolo-fig {
+	transform: rotate(-3deg) scale(1.03);
+}
+.rolo-item__nome {
+	font-size: 15px;
+	font-weight: 500;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+}
+.rolo-item__saldo {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 5px;
+}
+.rolo-item__saldo strong {
+	font-size: 27px;
+	line-height: 1.15;
+}
+.rolo-item__saldo span.num {
+	font-size: 15px;
+}
+.rolo-item__saldo small {
+	margin-left: 3px;
+	color: var(--tinta-3);
+	font-size: 13px;
+	font-weight: 600;
+}
+.rolo-item__marcas {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+.rolo-item--atual .rolo-item__nome {
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+
+/* A folha do período: o seletor é o topo dela. */
+.periodo {
+	display: grid;
+	gap: 22px;
+	padding: 14px 14px 22px;
+}
+.periodo > * + * {
+	margin-top: 0;
+}
+.periodo > :not(.periodo__abas) {
+	margin-inline: 10px;
+}
+.periodo__abas {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+}
+.periodo__total {
+	display: grid;
+	gap: 2px;
+}
+.periodo__total strong {
+	font-size: 38px;
+	line-height: 1.1;
+	letter-spacing: -0.04em;
+}
+.periodo__total span {
+	color: var(--tinta-3);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+.periodo__numeros {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+	gap: 12px;
+}
+.periodo__numeros > div {
+	display: grid;
+	gap: 2px;
+}
+.periodo__numeros dt {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	color: var(--tinta-3);
+	font-size: 12.5px;
+	font-weight: 700;
+}
+.periodo__numeros dd {
+	font-size: 16px;
+	font-weight: 800;
+}
+.periodo__bloco {
+	display: grid;
+	gap: 10px;
+}
+.periodo__bloco-topo {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+}
+.periodo__bloco-topo a {
+	font-size: 13px;
+	font-weight: 700;
+}
+.finalidades {
+	list-style: none;
+	display: grid;
+	gap: 9px;
+}
+.finalidades li {
+	display: grid;
+	grid-template-columns: 20px minmax(64px, 96px) minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 10px;
+	font-size: 14px;
+}
+.finalidades strong {
+	font-size: 14px;
+	white-space: nowrap;
+}
+
+/* As peças do período: a miniatura, o nome, o peso e o custo. A linha inteira abre a peça. */
+.pecas-lista {
+	list-style: none;
+	display: grid;
+}
+.pecas-lista a {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: 4px 14px;
+	margin-inline: -8px;
+	padding: 8px;
+	border-radius: var(--raio);
+	color: var(--tinta);
+	text-decoration: none;
+	transition: background-color var(--toque);
+}
+.pecas-lista a:hover {
+	background: var(--estudio);
+}
+.pecas-lista a:hover .peca-mini {
+	background: var(--folha);
+}
+.pecas-lista__nome {
+	display: grid;
+	font-size: 14.5px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+.pecas-lista__nome small {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0 8px;
+	color: var(--tinta-3);
+	font-weight: 500;
+}
+.pecas-lista__g {
+	color: var(--tinta-2);
+	font-size: 13.5px;
+	white-space: nowrap;
+}
+.pecas-lista strong {
+	font-size: 14.5px;
+	white-space: nowrap;
+}
+
+/* ── 12. Filamentos ────────────────────────────────────────────────────── */
+
+/* A linha de título de um bloco: nome, o dado que o resume e, à direita, o controle dele. */
+.faixa {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 16px;
+	min-height: 40px;
+}
+.faixa h2,
+.faixa h3 {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.faixa .busca,
+.faixa .campo--linha {
+	margin-left: auto;
+}
+.busca {
+	flex: 0 1 300px;
+	min-width: 0;
+}
+.busca input {
+	min-height: 40px;
+}
+.campo--linha {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.campo--linha select {
+	width: auto;
+	min-height: 40px;
+}
+
+.lista-detalhe {
+	display: grid;
+	gap: 24px 28px;
+	align-items: start;
+}
+.lista-detalhe__lista {
+	display: grid;
+	gap: 30px;
+	min-width: 0;
+}
+.lista-detalhe__detalhe {
+	display: grid;
+	gap: 14px;
+	min-width: 0;
+}
+#detalhe-rolo {
+	scroll-margin-top: 16px;
+}
+@media (min-width: 1200px) {
+	.lista-detalhe--aberto {
+		grid-template-columns: minmax(0, 1fr) minmax(400px, 452px);
+	}
+	.lista-detalhe--aberto .lista-detalhe__lista {
+		grid-column: 1;
+		grid-row: 1;
+	}
+	.lista-detalhe--aberto .lista-detalhe__detalhe {
+		position: sticky;
+		top: 12px;
+		grid-column: 2;
+		grid-row: 1;
+		max-height: calc(100vh - 24px);
+		border-radius: var(--raio-folha);
+		overflow-y: auto;
+		scrollbar-width: thin;
+	}
+}
+/* tela média ou estreita: abrir um rolo troca a prateleira pelo rolo, e o caminho de volta fica no topo */
+@media (max-width: 1199px) {
+	.lista-detalhe--aberto .lista-detalhe__lista {
+		display: none;
+	}
+	.lista-detalhe__detalhe {
+		max-width: 620px;
+	}
+}
+
+/* O que está na impressora: a máquina e os quatro encaixes dela. */
+.na-impressora {
+	display: grid;
+	grid-template-columns: 132px minmax(0, 1fr);
+	align-items: center;
+	gap: 18px;
+	padding: 16px 20px 16px 12px;
+}
+.na-impressora > * + * {
+	margin-top: 0;
+}
+.na-impressora__maquina {
+	width: 132px;
+	height: auto;
+}
+.na-impressora__corpo {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+}
+.encaixes {
+	list-style: none;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+}
+.encaixe {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	align-content: space-between;
+	gap: 8px;
+	min-height: 168px;
+	padding: 14px 8px 10px;
+	border-radius: 16px;
+	background: var(--estudio);
+	text-align: center;
+}
+.encaixe:not(.encaixe--cheio) {
+	background: none;
+	box-shadow: inset 0 0 0 1.5px var(--estudio-2);
+}
+.encaixe--esperando,
+.encaixe--esperando:not(.encaixe--cheio) {
+	box-shadow: inset 0 0 0 2px var(--plastico);
+}
+.encaixe__n {
+	position: absolute;
+	top: 9px;
+	left: 12px;
+	color: var(--tinta-3);
+	font-family: var(--voz-numero);
+	font-size: 13px;
+	font-weight: 600;
+}
+.encaixe .rolo-fig {
+	width: 74px;
+}
+/*
+ * Nenhuma posição ocupada: os encaixes encolhem. Com largura sobrando viram
+ * uma linha cada; a medida é a do bloco, não a da janela, porque o rolo aberto
+ * ao lado estreita este bloco sem mudar a janela.
+ */
+.na-impressora__corpo {
+	container: impressora / inline-size;
+}
+.encaixes:not(:has(.encaixe--cheio)) .encaixe {
+	min-height: 0;
+}
+.encaixes:not(:has(.encaixe--cheio)) .encaixe__vago {
+	width: 44px;
+	height: 44px;
+	margin: 2px 0;
+}
+@container impressora (min-width: 900px) {
+	.encaixes:not(:has(.encaixe--cheio)) .encaixe {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		justify-items: start;
+		padding: 12px 12px 12px 36px;
+		text-align: left;
+	}
+	.encaixes:not(:has(.encaixe--cheio)) .encaixe__vago {
+		width: 38px;
+		height: 38px;
+		margin: 0;
+	}
+	.encaixes:not(:has(.encaixe--cheio)) .encaixe__n {
+		top: 50%;
+		transform: translateY(-50%);
+	}
+	.encaixes:not(:has(.encaixe--cheio)) .encaixe__nome {
+		white-space: nowrap;
+	}
+	/* a posição que espera rolo já diz isso no botão; a palavra "Vazia" fica só para o leitor de tela */
+	.encaixes:not(:has(.encaixe--cheio)) .encaixe--esperando .encaixe__nome {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		clip-path: inset(50%);
+		overflow: hidden;
+	}
+	.encaixes:not(:has(.encaixe--cheio)) .encaixe--esperando .encaixe__acoes {
+		grid-column: 2 / -1;
+		justify-self: end;
+	}
+}
+/* o lugar vago: um aro tracejado do tamanho do rolo, sem desenhar carretel que não existe */
+.encaixe__vago {
+	width: 62px;
+	height: 62px;
+	margin: 6px 0;
+	border-radius: 50%;
+	border: 2px dashed var(--estudio-3);
+}
+.encaixe__nome {
+	font-size: 13.5px;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+}
+.encaixe__nome .etiqueta {
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	margin: 5px auto 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.encaixe__nome--vazio {
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.encaixe__acoes {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 4px;
+}
+
+.estoque-prateleira {
+	display: grid;
+	gap: 18px;
+	min-width: 0;
+}
+/* a posição que espera rolo: a instrução fica onde a escolha acontece */
+.instrucao {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 10px;
+	max-width: none;
+	padding: 8px 8px 8px 14px;
+	border-radius: var(--raio);
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+	font-size: 14px;
+	font-weight: 700;
+}
+.instrucao .acao {
+	--foco: #fff;
+	margin-left: auto;
+	color: var(--sobre-plastico);
+}
+.instrucao .acao:hover {
+	background: var(--plastico-2);
+}
+.rolo-item > form {
+	display: grid;
+}
+.acoes-linha {
+	display: flex;
+	gap: 14px;
+	white-space: nowrap;
+}
+
+/* O rolo aberto: o objeto grande, o saldo, os avisos com ação e as operações dele. */
+.rolo-detalhe {
+	display: grid;
+	gap: 18px;
+	padding: 14px 22px 24px;
+}
+.rolo-detalhe > * + * {
+	margin-top: 0;
+}
+.rolo-detalhe__topo {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.rolo-detalhe__cabeca {
+	display: grid;
+	grid-template-columns: 148px minmax(0, 1fr);
+	align-items: center;
+	gap: 18px;
+}
+.rolo-detalhe__id {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+}
+.rolo-detalhe__id h2 {
+	font-size: 20px;
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+.rolo-detalhe__id > p {
+	color: var(--tinta-2);
+	font-size: 14px;
+}
+.rolo-detalhe__marcas {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin-top: 2px;
+}
+.rolo-detalhe__saldo {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 6px;
+	margin-top: 8px;
+}
+.rolo-detalhe__id .rolo-detalhe__saldo {
+	color: var(--tinta);
+}
+.rolo-detalhe__saldo strong {
+	font-size: 34px;
+	line-height: 1.1;
+}
+.rolo-detalhe__saldo span.num {
+	font-size: 18px;
+}
+.rolo-detalhe__saldo small {
+	margin-left: 4px;
+	color: var(--tinta-3);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+.aviso-faixa {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px 10px 14px;
+	border-radius: 14px;
+	font-size: 13.5px;
+	line-height: 1.4;
+}
+.aviso-faixa p {
+	color: var(--tinta);
+}
+.aviso-faixa--acabando {
+	background: var(--baixo-fundo);
+	color: var(--baixo);
+}
+.aviso-faixa--umidade {
+	background: var(--umido-fundo);
+	color: var(--umido);
+}
+.aviso-faixa--acabando strong {
+	color: var(--baixo);
+}
+.aviso-faixa--umidade strong {
+	color: var(--umido);
+}
+.rolo-detalhe__bloco {
+	display: grid;
+	gap: 12px;
+	padding-top: 18px;
+	border-top: 1px solid var(--linha-suave);
+	scroll-margin-top: 16px;
+}
+.rolo-detalhe__bloco h3 {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.rolo-detalhe__bloco > .acao {
+	justify-self: start;
+}
+.rolo-detalhe__dupla {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+.rolo-detalhe__linha {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	font-size: 14px;
+}
+.rolo-detalhe__carregar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 12px;
+}
+/* a posição (1 a 4): rádios de verdade, vestidos de teclas */
+.posicoes {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+}
+.posicoes legend {
+	float: left;
+	margin-right: 6px;
+	padding: 0;
+	color: var(--tinta-2);
+	font-size: 13px;
+	font-weight: 700;
+}
+.posicoes label {
+	position: relative;
+	cursor: pointer;
+}
+.posicoes input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+}
+.posicoes span {
+	display: grid;
+	place-items: center;
+	width: 38px;
+	height: 34px;
+	border-radius: 10px;
+	background: var(--estudio-2);
+	font-family: var(--voz-numero);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+.posicoes input:checked + span {
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+.posicoes input:focus-visible + span {
+	outline: 2.5px solid var(--foco);
+	outline-offset: 2px;
+}
+.rolo-detalhe__acoes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding-top: 18px;
+	border-top: 1px solid var(--linha-suave);
+}
+/* a ficha: pares de nome e valor, em colunas que se arrumam sozinhas */
+.ficha {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+	gap: 14px 16px;
+}
+.rolo-detalhe > .ficha {
+	padding-top: 18px;
+	border-top: 1px solid var(--linha-suave);
+}
+.ficha dt {
+	color: var(--tinta-3);
+	font-size: 12.5px;
+	font-weight: 700;
+}
+.ficha dd {
+	font-size: 14.5px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+.rolo-detalhe__notas {
+	color: var(--tinta-2);
+	font-size: 13.5px;
+}
+.foto-catalogo {
+	display: grid;
+	justify-items: start;
+	gap: 6px;
+}
+/* `display: grid` venceria o atributo `hidden`, que a foto recebe quando o arquivo não abre. */
+.foto-catalogo[hidden] {
+	display: none;
+}
+.foto-catalogo img {
+	max-width: 100%;
+	max-height: 240px;
+	border-radius: 14px;
+	background: var(--estudio);
+}
+.foto-catalogo figcaption {
+	color: var(--tinta-3);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+/* ── 13. Impressões ────────────────────────────────────────────────────── */
+
+/*
+ * A lista é uma vitrine das peças: a imagem é o azulejo, a legenda fica solta
+ * embaixo. As duas ferramentas da lista (filtrar, trocar filamento em lote)
+ * são gavetas: fechadas, cabem numa linha; aberta, a gaveta vira folha.
+ */
+.impressoes {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 14px 10px;
+}
+.impressoes > *,
+.impressoes__lote > * {
+	flex: 1 1 100%;
+	min-width: 0;
+}
+.impressoes__lote {
+	display: contents;
+}
+.impressoes > .recolhivel:not([open]),
+.impressoes__lote > .recolhivel:not([open]) {
+	flex: 0 1 auto;
+}
+.recolhivel {
+	border: 0;
+}
+.recolhivel > summary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: var(--altura);
+	list-style: none;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+.recolhivel > summary::-webkit-details-marker {
+	display: none;
+}
+.recolhivel > summary::after {
+	content: '';
+	flex: none;
+	width: 18px;
+	height: 18px;
+	margin-left: auto;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.5 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.5 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+	transition: transform var(--toque);
+}
+.recolhivel[open] > summary::after {
+	transform: rotate(180deg);
+}
+/* fechada, a gaveta tem cara de ação secundária */
+.folha.recolhivel:not([open]) {
+	width: fit-content;
+	max-width: 100%;
+	padding: 0 14px 0 16px;
+	border-radius: var(--raio);
+	box-shadow: inset 0 0 0 1px var(--linha-forte);
+}
+.folha.recolhivel:not([open]):hover {
+	box-shadow: inset 0 0 0 1px var(--tinta);
+}
+.folha.recolhivel[open] {
+	padding-top: 12px;
+}
+.folha.recolhivel[open] > summary {
+	margin-bottom: 4px;
+}
+
+.ajuste-lote {
+	display: grid;
+	gap: 14px;
+	max-width: 760px;
+}
+.ajuste-lote-selecao {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.ajuste-lote-resumo {
+	padding: 10px 14px;
+	border-radius: var(--raio);
+	background: var(--estudio);
+	font-size: 14px;
+}
+.ajuste-lote > .acao {
+	justify-self: start;
+}
+
+.pecas-grade {
+	list-style: none;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+	gap: 30px 22px;
+	padding-top: 6px;
+}
+.peca-cartao {
+	position: relative;
+	min-width: 0;
+}
+.peca-cartao__abrir {
+	display: grid;
+	gap: 5px;
+	color: var(--tinta);
+	text-decoration: none;
+	border-radius: var(--raio-folha);
+}
+.peca-cartao__abrir:hover {
+	text-decoration: none;
+}
+.peca-cartao__figura {
+	display: block;
+	aspect-ratio: 1;
+	margin-bottom: 7px;
+	border-radius: var(--raio-folha);
+	background: var(--folha);
+}
+.peca-cartao__figura.render-peca > img,
+.peca-cartao__figura.render-peca > canvas {
+	transition: transform 180ms ease;
+}
+.peca-cartao__abrir:hover .peca-cartao__figura > img,
+.peca-cartao__abrir:hover .peca-cartao__figura > canvas {
+	transform: scale(1.05);
+}
+/* registro sem imagem: o lugar dela fica vago, e está escrito */
+.peca-cartao__figura--vazia {
+	display: grid;
+	place-items: center;
+	align-content: center;
+	gap: 8px;
+	background: none;
+	box-shadow: inset 0 0 0 2px var(--estudio-3);
+	color: var(--tinta-3);
+	font-size: 13px;
+	font-weight: 700;
+}
+.peca-cartao__nome {
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+}
+.peca-cartao__pe {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 2px 10px;
+	color: var(--tinta-3);
+	font-size: 13.5px;
+}
+.peca-cartao__pe strong {
+	margin-left: auto;
+	color: var(--tinta);
+	font-size: 14.5px;
+}
+.peca-cartao__pe .marca {
+	font-size: 13.5px;
+}
+/* a caixa de seleção só existe enquanto a troca em lote está aberta */
+.peca-marcar {
+	position: absolute;
+	z-index: 1;
+	top: 10px;
+	left: 10px;
+	display: none;
+	align-items: center;
+	gap: 7px;
+	min-height: 36px;
+	padding: 0 11px 0 8px;
+	border-radius: 11px;
+	background: var(--folha);
+	box-shadow: 0 0 0 1px var(--linha-forte);
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+}
+.impressoes:has(.ajustes-massa[open]) .peca-marcar {
+	display: inline-flex;
+}
+.peca-marcada .peca-cartao__figura {
+	box-shadow: inset 0 0 0 3px var(--plastico);
+}
+.peca-marcada .peca-marcar {
+	background: var(--plastico);
+	box-shadow: none;
+	color: var(--sobre-plastico);
+}
+.peca-mini--linha {
+	width: 44px;
+	border-radius: 10px;
+}
+.reclassificar {
+	padding-top: 16px;
+	border-top: 1px solid var(--linha-suave);
+}
+.impressoes > .crt-paginas {
+	border-top: 0;
+	padding-top: 4px;
+}
+
+/*
+ * Uma impressão aberta. A peça ocupa o lado esquerdo e fica parada enquanto
+ * os dados rolam: custo (folha), o rolo que pagou por ela (objeto solto) e os
+ * fatos do registro.
+ */
+.topo--peca .voltar {
+	flex: 1 1 100%;
+	margin-bottom: -6px;
+}
+.topo--peca h1 {
+	overflow-wrap: anywhere;
+}
+.peca {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: start;
+	gap: 26px;
+}
+.peca__palco {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 10px;
+	width: 100%;
+	max-width: 520px;
+	margin: 0;
+}
+.peca__figura {
+	grid-area: 1 / 1;
+	display: block;
+	aspect-ratio: 1;
+	border-radius: 28px;
+	background: var(--folha);
+}
+.peca__figura.render-peca > img,
+.peca__figura.render-peca > canvas {
+	inset: 9%;
+	width: 82%;
+	height: 82%;
+}
+.peca__figura--vazia {
+	display: grid;
+	place-items: center;
+	align-content: center;
+	gap: 6px;
+	aspect-ratio: 4 / 3;
+	padding: 24px;
+	background: none;
+	box-shadow: inset 0 0 0 2px var(--estudio-3);
+	color: var(--tinta-3);
+	text-align: center;
+}
+.peca__figura--vazia strong {
+	margin-top: 6px;
+	color: var(--tinta-2);
+	font-size: 16px;
+}
+.peca__figura--vazia span {
+	max-width: 34ch;
+	font-size: 14px;
+}
+.peca__versao {
+	grid-area: 1 / 1;
+	z-index: 1;
+	align-self: end;
+	justify-self: center;
+	margin-bottom: 14px;
+}
+.peca__palco figcaption {
+	padding-inline: 4px;
+	color: var(--tinta-3);
+	font-size: 13px;
+}
+.segmentos > button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 34px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 9px;
+	background: none;
+	color: var(--tinta-2);
+	font-family: var(--voz);
+	font-size: 13.5px;
+	font-weight: 700;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: background-color var(--toque), color var(--toque);
+}
+.segmentos > button:hover {
+	background: var(--estudio-3);
+	color: var(--tinta);
+}
+.segmentos > button[aria-pressed='true'] {
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+.peca__dados {
+	display: grid;
+	gap: 20px;
+	min-width: 0;
+}
+.custo {
+	display: grid;
+	gap: 16px;
+}
+.custo > * + * {
+	margin-top: 0;
+}
+.custo__total {
+	display: grid;
+	gap: 2px;
+}
+.custo__total strong {
+	font-size: 42px;
+	line-height: 1.1;
+	letter-spacing: -0.04em;
+}
+.custo__total span {
+	color: var(--tinta-3);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+.custo__partes {
+	list-style: none;
+	display: grid;
+	gap: 10px;
+}
+.custo__partes li {
+	display: grid;
+	grid-template-columns: 20px minmax(80px, 108px) minmax(0, 1fr) auto 38px;
+	align-items: center;
+	gap: 10px;
+	font-size: 14.5px;
+}
+.custo__partes strong {
+	white-space: nowrap;
+}
+.custo__partes small {
+	color: var(--tinta-3);
+	font-weight: 600;
+	text-align: right;
+}
+/* o rolo que pagou pela peça: o objeto, o nome, quanto dele foi nela */
+.peca__rolo {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	max-width: none;
+	padding: 6px 12px 6px 6px;
+	border-radius: var(--raio-folha);
+	color: var(--tinta);
+	text-decoration: none;
+	transition: background-color var(--toque);
+}
+a.peca__rolo:hover {
+	background: var(--estudio-2);
+	text-decoration: none;
+}
+.peca__rolo .rolo-fig {
+	flex: none;
+	width: 84px;
+}
+.peca__rolo > .icone {
+	color: var(--tinta-3);
+}
+.peca__rolo--ausente {
+	padding-left: 16px;
+	color: var(--tinta-2);
+}
+.peca__rolo-nome {
+	flex: 1;
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+	font-size: 17px;
+	font-weight: 500;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+}
+.peca__rolo-nome small {
+	color: var(--tinta-2);
+	font-size: 13.5px;
+}
+.peca__rolo-g {
+	display: grid;
+	justify-items: end;
+	white-space: nowrap;
+}
+.peca__rolo-g strong {
+	font-size: 20px;
+}
+.peca__rolo-g small {
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.fatos {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 18px 20px;
+	padding: 4px 6px;
+}
+.fatos dt {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--tinta-3);
+	font-size: 12.5px;
+	font-weight: 700;
+}
+.fatos dd {
+	margin-top: 2px;
+	font-size: 15px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+.peca__obs {
+	padding: 0 6px;
+	color: var(--tinta-2);
+}
+.confirmar {
+	box-shadow: inset 0 0 0 2px var(--falha);
+}
+.acao--fim {
+	margin-left: auto;
+}
+@media (min-width: 1000px) {
+	.peca {
+		grid-template-columns: minmax(300px, min(44%, 520px)) minmax(0, 1fr);
+		gap: 36px;
+	}
+	.peca__palco {
+		position: sticky;
+		top: 24px;
+	}
+}
+
+/* colunas que só cabem no largo, e a linha que as substitui no estreito */
+.linha-estreita {
+	display: none;
+}
+
+/* ── 14. Registrar e resultado ─────────────────────────────────────────── */
+
+/*
+ * Registrar: à esquerda a folha onde se escreve; à direita a conferência, que
+ * fica parada e mostra o rolo já como vai ficar. O botão de registrar é o pé
+ * da conferência: confere-se e salva-se no mesmo lugar.
+ */
+.registro {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: start;
+	gap: 24px;
+}
+.registro__campos {
+	display: grid;
+	gap: 26px;
+	min-width: 0;
+}
+.registro__campos > * + * {
+	margin-top: 0;
+}
+.registro__grupo {
+	display: grid;
+	gap: 16px;
+	min-width: 0;
+}
+.registro__grupo + .registro__grupo {
+	padding-top: 24px;
+	border-top: 1px solid var(--linha-suave);
+}
+.registro__dupla {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px 18px;
+}
+.novo-filamento-inline {
+	justify-self: start;
+}
+
+/* a escolha do rolo: cada opção é o objeto, com o que está escrito nele */
+.filamento-escolha,
+.opcoes-icone {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+}
+.filamento-escolha legend {
+	float: left;
+	width: 100%;
+	padding: 0;
+	font-size: 17px;
+	font-weight: 800;
+	line-height: 1.3;
+}
+.filamento-escolha .busca {
+	flex: none;
+	max-width: 340px;
+}
+.filamento-opcoes {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 10px;
+}
+.filamento-opcao {
+	position: relative;
+	display: grid;
+	align-content: start;
+	gap: 3px;
+	min-width: 0;
+	padding: 12px 12px 12px;
+	border-radius: 18px;
+	background: var(--estudio);
+	color: var(--tinta);
+	font-size: 14.5px;
+	font-weight: 500;
+	line-height: 1.3;
+	cursor: pointer;
+	transition: background-color var(--toque), box-shadow var(--toque);
+}
+.filamento-opcao:hover {
+	background: var(--estudio-2);
+}
+.filamento-opcao input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+.filamento-opcao .rolo-fig {
+	width: 92px;
+	margin: 0 auto 8px;
+	transition: transform 180ms ease;
+	transform-origin: 50% 96%;
+}
+/* `.selecionada` vem do script; `:has(input:checked)` cobre a tela sem script */
+.filamento-opcao.selecionada,
+.filamento-opcao:has(input:checked) {
+	background: var(--folha);
+	box-shadow: inset 0 0 0 2.5px var(--plastico);
+}
+.filamento-opcao.selecionada .rolo-fig,
+.filamento-opcao:has(input:checked) .rolo-fig {
+	transform: scale(1.06);
+}
+.filamento-opcao:has(input:focus-visible) {
+	outline: 2.5px solid var(--foco);
+	outline-offset: 2px;
+}
+.filamento-opcao__nome {
+	overflow-wrap: anywhere;
+}
+.filamento-opcao__saldo {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 4px;
+	font-size: 13.5px;
+}
+.filamento-opcao__saldo strong {
+	font-size: 17px;
+}
+.filamento-opcao__saldo small {
+	margin-left: 2px;
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.filamento-opcao__marcas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	margin-top: 5px;
+}
+.filamento-opcao__marca {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	display: none;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+.filamento-opcao__marca .icone {
+	stroke-width: 2.6;
+}
+.filamento-opcao.selecionada .filamento-opcao__marca,
+.filamento-opcao:has(input:checked) .filamento-opcao__marca {
+	display: grid;
+}
+
+/* escolhas de poucas opções, à vista: rádios de verdade vestidos de tecla com ícone */
+.opcoes-icone {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.opcoes-icone legend {
+	float: left;
+	width: 100%;
+	padding: 0;
+	color: var(--tinta-2);
+	font-size: 13px;
+	font-weight: 700;
+}
+.opcoes-icone label {
+	position: relative;
+	display: block;
+	cursor: pointer;
+}
+.opcoes-icone input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+.opcoes-icone label > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	min-height: 42px;
+	padding: 0 14px 0 12px;
+	border-radius: var(--raio);
+	background: var(--estudio);
+	color: var(--tinta-2);
+	font-size: 14px;
+	font-weight: 700;
+	white-space: nowrap;
+	transition: background-color var(--toque), color var(--toque);
+}
+.opcoes-icone label:hover > span {
+	background: var(--estudio-2);
+	color: var(--tinta);
+}
+.opcoes-icone input:checked + span {
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+.opcoes-icone input:focus-visible + span {
+	outline: 2.5px solid var(--foco);
+	outline-offset: 2px;
+}
+.opcoes-icone .crt-erro {
+	flex: 1 1 100%;
+}
+
+.conferencia {
+	display: grid;
+	gap: 18px;
+	min-width: 0;
+	padding: 20px 22px 22px;
+	border-radius: var(--raio-folha);
+	background: var(--folha);
+}
+.conferencia__rolo {
+	display: grid;
+	grid-template-columns: 104px minmax(0, 1fr);
+	align-items: center;
+	gap: 16px;
+	min-height: 104px;
+}
+.conferencia__rolo .encaixe__vago {
+	width: 84px;
+	height: 84px;
+	margin: 0 auto;
+}
+.conferencia__fio {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+	font-size: 16px;
+	font-weight: 500;
+	line-height: 1.3;
+}
+.conferencia__saldo {
+	margin-top: 6px;
+}
+.transicao {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 8px;
+	font-size: 15px;
+}
+.transicao s {
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.transicao i,
+.recibo__saldo i {
+	color: var(--tinta-3);
+	font-style: normal;
+	font-weight: 700;
+}
+.transicao b {
+	font-size: 24px;
+	line-height: 1.15;
+}
+.transicao small {
+	color: var(--tinta-3);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+.conferencia dl {
+	display: grid;
+	gap: 9px;
+	padding-top: 16px;
+	border-top: 1px solid var(--linha-suave);
+}
+.conferencia dl > div {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	font-size: 14.5px;
+}
+.conferencia dt {
+	flex: none;
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.conferencia dd {
+	min-width: 0;
+	font-weight: 700;
+	text-align: right;
+	overflow-wrap: anywhere;
+}
+.conferencia dd.num {
+	font-size: 17px;
+}
+.conferencia .vazio,
+.conferencia dd.vazio {
+	color: var(--tinta-3);
+	font-weight: 500;
+}
+.conferencia__avisos {
+	display: grid;
+	gap: 10px;
+}
+.conferencia__avisos:empty {
+	display: none;
+}
+.conferencia__avisos .crt-dica {
+	padding: 10px 12px;
+	border-radius: var(--raio);
+	background: var(--baixo-fundo);
+	color: var(--tinta);
+}
+.conferencia > .acao {
+	width: 100%;
+}
+@media (min-width: 1040px) {
+	.registro {
+		grid-template-columns: minmax(0, 1fr) minmax(330px, 384px);
+		gap: 28px;
+	}
+	.conferencia {
+		position: sticky;
+		top: 24px;
+	}
+}
+
+/* O resultado do registro: o que custou e como o rolo ficou. */
+.recibo {
+	display: grid;
+	gap: 26px;
+	max-width: 980px;
+}
+.recibo__topo {
+	display: grid;
+	gap: 6px;
+}
+.recibo__status {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--ok);
+	font-size: 15px;
+	font-weight: 800;
+}
+.recibo__topo h2 {
+	font-family: var(--voz-numero);
+	font-size: 30px;
+	font-weight: 600;
+	letter-spacing: -0.03em;
+	line-height: 1.15;
+	overflow-wrap: anywhere;
+}
+.recibo__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 18px;
+	color: var(--tinta-2);
+	font-size: 14.5px;
+	font-weight: 600;
+}
+.recibo__meta span {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+.recibo__corpo {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+	align-items: center;
+	gap: 28px 36px;
+}
+.custo__partes--recibo li {
+	grid-template-columns: 20px minmax(110px, 150px) minmax(0, 1fr) auto;
+}
+.custo__partes--recibo li small {
+	margin-left: 2px;
+	color: var(--tinta-3);
+	font-weight: 600;
+	text-align: left;
+}
+/* com o resultado na tela, o título da rota ("Registrar impressão") fica só para o leitor de tela */
+.palco:has(.recibo) > .topo--registro {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	min-height: 0;
+	margin: -1px;
+	clip-path: inset(50%);
+	overflow: hidden;
+	white-space: nowrap;
+}
+.palco:has(.recibo) > .topo--registro + * {
+	margin-top: 0;
+}
+.recibo__rolo-bloco {
+	display: grid;
+	grid-template-columns: minmax(120px, 176px) minmax(0, 1fr);
+	align-items: center;
+	gap: 22px;
+}
+.recibo__rolo-dados {
+	display: grid;
+	gap: 6px;
+	min-width: 0;
+}
+.recibo__saldo {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 10px;
+	font-size: 17px;
+}
+.recibo__saldo s {
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.recibo__saldo span.num {
+	font-size: 36px;
+	line-height: 1.1;
+	letter-spacing: -0.04em;
+}
+.recibo__saldo small {
+	color: var(--tinta-3);
+	font-size: 14px;
+	font-weight: 600;
+}
+.recibo__rolo {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+	font-size: 16px;
+	font-weight: 500;
+}
+.recibo__explica {
+	margin-top: 4px;
+	padding: 10px 12px;
+	border-radius: var(--raio);
+	background: var(--baixo-fundo);
+	font-size: 13.5px;
+	line-height: 1.45;
+}
+.recibo__acoes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+/* a escolha de um rolo dentro de um formulário comum (edição, troca em lote) */
+.seletor-filamento details {
+	position: relative;
+}
+.seletor-filamento summary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 44px;
+	padding: 6px 12px 6px 13px;
+	border: 1px solid var(--linha-forte);
+	border-radius: var(--raio);
+	background: var(--folha);
+	list-style: none;
+	font-size: 15px;
+	font-weight: 600;
+	transition: border-color var(--toque);
+}
+.seletor-filamento summary::-webkit-details-marker {
+	display: none;
+}
+.seletor-filamento summary:hover,
+.seletor-filamento details[open] > summary {
+	border-color: var(--tinta);
+}
+.seletor-filamento summary[aria-disabled='true'] {
+	background: var(--estudio-2);
+	color: var(--tinta-3);
+	cursor: not-allowed;
+}
+.seletor-filamento__invalido {
+	border-color: var(--falha);
+	box-shadow: 0 0 0 1px var(--falha);
+}
+.seletor-filamento__valor {
+	flex: 1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+	min-width: 0;
+}
+.seletor-filamento summary > .icone {
+	color: var(--tinta);
+	stroke-width: 2.2;
+}
+.seletor-filamento-menu {
+	position: absolute;
+	z-index: 30;
+	top: calc(100% + 6px);
+	left: 0;
+	display: grid;
+	gap: 8px;
+	width: max(100%, 300px);
+	max-width: calc(100vw - 48px);
+	padding: 8px;
+	border-radius: 16px;
+	background: var(--folha);
+	box-shadow: 0 0 0 1px var(--linha), 0 14px 44px rgb(23 24 26 / 0.24);
+}
+.seletor-filamento-opcoes {
+	display: grid;
+	gap: 2px;
+	max-height: 286px;
+	overflow-y: auto;
+}
+.seletor-filamento-opcao {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	min-height: 44px;
+	padding: 6px 10px;
+	border: 0;
+	border-radius: 10px;
+	background: none;
+	color: var(--tinta);
+	font-family: var(--voz);
+	font-size: 14.5px;
+	text-align: left;
+	cursor: pointer;
+}
+.seletor-filamento-opcao:hover {
+	background: var(--estudio);
+}
+.seletor-filamento-opcao[aria-pressed='true'] {
+	background: var(--estudio-2);
+}
+.seletor-filamento-opcao small {
+	color: var(--tinta-3);
+}
+.seletor-filamento-opcao > .icone {
+	margin-left: auto;
+	stroke-width: 2.4;
+}
+.seletor-filamento-opcoes .nota {
+	padding: 10px;
+}
+
+/* o cadastro de filamento aberto de dentro do registro */
+.cadastro-dialogo {
+	width: min(880px, calc(100vw - 24px));
+	max-height: calc(100dvh - 24px);
+	margin: auto;
+	padding: 0;
+	border: 0;
+	border-radius: 24px;
+	background: var(--estudio);
+	color: var(--tinta);
+	overflow-y: auto;
+}
+.cadastro-dialogo::backdrop {
+	background: rgb(23 24 26 / 0.5);
+}
+.cadastro-dialogo > header {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 14px 16px 14px 24px;
+	background: var(--estudio);
+}
+.cadastro-dialogo > header h2 {
+	font-family: var(--voz-numero);
+	font-size: 20px;
+	font-weight: 600;
+	letter-spacing: -0.03em;
+}
+.cadastro-dialogo > :not(header) {
+	margin: 0 24px 24px;
+}
+
+/* ── 15. Impressoras, Importar, Configurações ──────────────────────────── */
+
+/* A máquina é o objeto; os números dela ficam ao lado, soltos no estúdio. */
+.maquina {
+	display: grid;
+	grid-template-columns: minmax(180px, 300px) minmax(0, 1fr);
+	align-items: center;
+	gap: 16px 36px;
+}
+.maquina__figura {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+.vazio-estado .maquina__figura {
+	width: min(260px, 70%);
+	opacity: 0.55;
+}
+.maquina__corpo {
+	display: grid;
+	gap: 20px;
+	min-width: 0;
+}
+.maquina__corpo .faixa h2 {
+	font-family: var(--voz-numero);
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.03em;
+}
+.maquina__editar {
+	margin-left: auto;
+}
+.maquina__uso {
+	display: grid;
+	gap: 8px;
+	max-width: 520px;
+}
+.maquina__horas {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 10px;
+}
+.maquina__horas strong {
+	font-size: 38px;
+	line-height: 1.1;
+	letter-spacing: -0.04em;
+}
+.maquina__horas span {
+	color: var(--tinta-3);
+	font-size: 14px;
+	font-weight: 600;
+}
+.maquina__uso .barra {
+	background: var(--estudio-3);
+}
+.maquina .fatos {
+	grid-template-columns: repeat(auto-fill, minmax(150px, 180px));
+	padding: 0;
+}
+/* o que está carregado nela agora: os rolos, na cor de cada um */
+.maquina__rolos {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	justify-self: start;
+	max-width: 100%;
+	margin-left: -8px;
+	padding: 6px 12px 6px 8px;
+	border-radius: var(--raio-folha);
+	color: var(--tinta);
+	font-size: 15px;
+	font-weight: 500;
+	line-height: 1.35;
+	text-decoration: none;
+	transition: background-color var(--toque);
+}
+.maquina__rolos:hover {
+	background: var(--estudio-2);
+	text-decoration: none;
+}
+.maquina__rolos small {
+	display: block;
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.maquina__rolos-figuras {
+	display: flex;
+	flex: none;
+}
+.maquina__rolos-figuras .rolo-fig {
+	width: 58px;
+}
+.maquina__rolos-figuras .rolo-fig + .rolo-fig {
+	margin-left: -14px;
+}
+.maquina__rolos .encaixe__vago {
+	flex: none;
+	width: 46px;
+	height: 46px;
+	margin: 0;
+}
+.maquina__rolos > .icone {
+	flex: none;
+	color: var(--tinta-3);
+}
+.maquina + .maquina {
+	padding-top: 24px;
+	border-top: 1px solid var(--linha);
+}
+
+/* as folhas empilhadas dentro de um formulário (a gravação da importação) respiram como as da tela */
+.palco form > section + section,
+.palco form > section + .crt-acoes,
+.palco form > .crt-acoes + section {
+	margin-top: 16px;
+}
+
+/* Importar: o que falta para buscar, cada item com o caminho para resolver. */
+.importar-inicio {
+	max-width: 760px;
+}
+.requisitos {
+	list-style: none;
+	display: grid;
+	gap: 10px;
+}
+.requisitos li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 10px;
+	min-height: 34px;
+	font-weight: 600;
+}
+.requisitos li > .icone {
+	color: var(--ok);
+}
+.requisitos li.requisitos__falta > .icone {
+	color: var(--falha);
+}
+.requisitos li > .acao {
+	margin-left: auto;
+}
+
+/* Configurações: três folhas de assuntos diferentes, em coluna de leitura. */
+.ajustes {
+	display: grid;
+	gap: 16px;
+	max-width: 760px;
+}
+.ajustes .faixa .marca {
+	margin-left: auto;
+}
+.retorno--atencao {
+	background: var(--baixo-fundo);
+	color: var(--baixo);
+}
+
+/* ── 16. Cadastro de filamento ─────────────────────────────────────────── */
+
+.cadastro-guiado {
+	display: grid;
+	gap: 24px;
+	max-width: 980px;
+}
+.cadastro-guiado > * + * {
+	margin-top: 0;
+}
+/* as quatro perguntas: a atual em plástico, as respondidas com o visto */
+.cadastro-passos {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: 2px;
+	padding: 3px;
+	border-radius: var(--raio);
+	background: var(--estudio-2);
+}
+.cadastro-passos button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-width: 0;
+	min-height: 40px;
+	padding: 0 8px;
+	border: 0;
+	border-radius: 9px;
+	background: none;
+	color: var(--tinta-2);
+	font-family: var(--voz);
+	font-size: 13.5px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background-color var(--toque), color var(--toque);
+}
+.cadastro-passos button > span {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 1.5px currentColor;
+	font-family: var(--voz-numero);
+	font-size: 11px;
+	font-weight: 600;
+}
+.cadastro-passos button > span .icone {
+	stroke-width: 2.8;
+}
+.cadastro-passos button:not(:disabled):hover {
+	background: var(--estudio-3);
+	color: var(--tinta);
+}
+.cadastro-passos button.atual {
+	background: var(--plastico);
+	color: var(--sobre-plastico);
+}
+.cadastro-passos button.feito > span {
+	background: var(--tinta-2);
+	box-shadow: none;
+	color: var(--folha);
+}
+.cadastro-passos button:disabled {
+	color: var(--tinta-3);
+	cursor: default;
+}
+.cadastro-etapa {
+	display: grid;
+	gap: 18px;
+	min-width: 0;
+}
+.cadastro-titulo {
+	display: grid;
+	gap: 2px;
+}
+.cadastro-titulo h2 {
+	font-family: var(--voz-numero);
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.03em;
+}
+.cadastro-titulo p {
+	color: var(--tinta-2);
+	font-weight: 600;
+}
+.cadastro-etapa .busca {
+	max-width: 340px;
+}
+.cadastro-marcas,
+.cadastro-produtos,
+.cadastro-cores {
+	display: grid;
+	gap: 10px;
+}
+.cadastro-marcas {
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+.cadastro-produtos {
+	grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+.cadastro-cores {
+	grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+}
+.cadastro-marca,
+.cadastro-produto,
+.cadastro-cor {
+	position: relative;
+	display: grid;
+	align-content: start;
+	gap: 2px;
+	min-width: 0;
+	padding: 12px;
+	border: 0;
+	border-radius: 18px;
+	background: var(--estudio);
+	color: var(--tinta);
+	font-family: var(--voz);
+	font-size: 14.5px;
+	line-height: 1.3;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color var(--toque), box-shadow var(--toque);
+}
+.cadastro-marca:hover,
+.cadastro-produto:hover,
+.cadastro-cor:hover {
+	background: var(--estudio-2);
+}
+.cadastro-marca strong,
+.cadastro-produto strong,
+.cadastro-cor strong {
+	overflow-wrap: anywhere;
+}
+.cadastro-marca small,
+.cadastro-produto small,
+.cadastro-cor small {
+	color: var(--tinta-3);
+	font-weight: 600;
+}
+.cadastro-marca {
+	grid-template-columns: 44px minmax(0, 1fr);
+	align-items: center;
+	column-gap: 12px;
+}
+.cadastro-marca__logo {
+	position: relative;
+	grid-row: span 2;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 12px;
+	background: var(--folha);
+	color: var(--tinta-2);
+	font-family: var(--voz-numero);
+	font-size: 17px;
+	font-weight: 600;
+	overflow: hidden;
+}
+.cadastro-marca__logo img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	padding: 6px;
+	background: var(--folha);
+	object-fit: contain;
+}
+.cadastro-produto .produto-foto {
+	aspect-ratio: 4 / 3;
+	margin-bottom: 8px;
+}
+.cadastro-cor {
+	justify-items: center;
+	text-align: center;
+}
+.cadastro-cor .rolo-fig {
+	width: 78px;
+	margin-bottom: 6px;
+}
+.cadastro-cor.selecionada {
+	background: var(--folha);
+	box-shadow: inset 0 0 0 2.5px var(--plastico);
+}
+.cadastro-cor .cor-check {
+	display: grid;
+}
+.cadastro-alternativa {
+	justify-self: start;
+}
+.cadastro-compra {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+	align-items: start;
+	gap: 24px 32px;
+}
+.cadastro-resumo {
+	display: grid;
+	justify-items: start;
+	gap: 8px;
+	min-width: 0;
+	max-width: 340px;
+}
+.cadastro-resumo .produto-foto {
+	width: 100%;
+	aspect-ratio: 4 / 3;
+}
+.cadastro-resumo__nome {
+	display: grid;
+	font-size: 18px;
+	font-weight: 500;
+	line-height: 1.3;
+}
+.cadastro-resumo small {
+	color: var(--tinta-3);
+	font-size: 13px;
+	font-weight: 600;
+}
+.cadastro-resumo .crt-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13.5px;
+}
+.cadastro-campos {
+	display: grid;
+	gap: 16px;
+	min-width: 0;
+	max-width: 460px;
+}
+.cadastro-dupla {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+	gap: 14px;
+}
+.cadastro-detalhes > label,
+.cadastro-detalhes > .cadastro-dupla {
+	margin-top: 14px;
+}
+.cadastro-sucesso {
+	display: grid;
+	gap: 14px;
+	max-width: 560px;
+}
+.cadastro-sucesso > * + * {
+	margin-top: 0;
+}
+
+/* a imagem de catálogo: a foto quando abre; senão, o rolo desenhado na cor do cadastro */
+.produto-foto {
+	position: relative;
+	display: grid;
+	place-items: center;
+	align-content: center;
+	gap: 4px;
+	min-height: 112px;
+	border-radius: 14px;
+	background: var(--folha);
+	color: var(--tinta-3);
+	overflow: hidden;
+}
+.produto-foto > img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	opacity: 0;
+	transition: opacity 160ms;
+}
+.produto-foto > img.carregada {
+	opacity: 1;
+}
+.produto-foto .rolo-fig {
+	width: min(56%, 132px);
+}
+.produto-foto small {
+	padding: 0 8px 6px;
+	font-size: 11.5px;
+	font-weight: 600;
+	text-align: center;
+}
+.folha .produto-foto {
+	background: var(--estudio);
+}
+.cadastro-produto .produto-foto,
+.cadastro-produto:hover .produto-foto {
+	background: var(--folha);
+}
+
+/* ── 17. Telas estreitas ───────────────────────────────────────────────── */
+
+@media (max-width: 1120px) {
+	.inicio {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/*
+ * Celular: a doca deita no pé da tela. Início, Impressões, [registrar],
+ * Filamentos, Mais. O conteúdo começa no topo, sem barra de título.
+ */
+@media (max-width: 760px) {
+	.app {
+		padding-left: 0;
+		padding-bottom: calc(96px + env(safe-area-inset-bottom));
+	}
+	.so-largo,
+	.doca .so-largo {
+		display: none;
+	}
+	.pular-conteudo {
+		left: 12px;
+	}
+	.doca {
+		left: 10px;
+		right: 10px;
+		top: auto;
+		bottom: calc(10px + env(safe-area-inset-bottom));
+		width: auto;
+		height: 68px;
+		flex-direction: row;
+		padding: 0 6px;
+		border-radius: 24px;
+		overflow: visible;
+	}
+	.doca__nav {
+		flex-direction: row;
+		align-items: stretch;
+		gap: 0;
+		margin: 0;
+	}
+	.doca__nav > * {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+	.doca__item {
+		align-content: center;
+		height: 100%;
+		padding: 4px 2px;
+		font-size: 10.5px;
+	}
+	.doca .doca__item[aria-current='page'],
+	.doca__mais--atual > .doca__item {
+		background: none;
+	}
+	.doca .doca__item[aria-current='page'] .icone,
+	.doca__mais--atual > .doca__item .icone {
+		filter: drop-shadow(0 0 0 #fff);
+	}
+	.doca__registrar.so-estreito {
+		display: grid;
+		align-content: center;
+		padding: 0;
+	}
+	.doca__registrar .doca__botao {
+		width: 48px;
+		height: 48px;
+		border-radius: 17px;
+	}
+	.doca__mais.so-estreito {
+		position: relative;
+		display: block;
+	}
+	.doca__mais > summary {
+		list-style: none;
+		width: 100%;
+	}
+	.doca__mais > summary::-webkit-details-marker {
+		display: none;
+	}
+	.doca__menu {
+		position: absolute;
+		right: -2px;
+		bottom: calc(100% + 16px);
+		display: grid;
+		gap: 2px;
+		min-width: 216px;
+		padding: 8px;
+		border-radius: 22px;
+		background: var(--plastico);
+		box-shadow: 0 12px 34px rgb(23 24 26 / 0.34);
+	}
+	.doca .doca__menu a {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-height: 50px;
+		padding: 0 14px;
+		border-radius: 15px;
+		color: var(--sobre-plastico);
+		font-size: 14.5px;
+		font-weight: 700;
+	}
+	.doca .doca__menu a[aria-current='page'] {
+		background: var(--plastico-2);
+	}
+	.palco {
+		padding: 18px 16px 24px;
+	}
+	.palco > * + * {
+		margin-top: 20px;
+	}
+	h1,
+	.titulo-grande {
+		font-size: 23px;
+	}
+	.painel,
+	.folha {
+		padding: 18px 16px 20px;
+	}
+	.inicio {
+		gap: 26px;
+	}
+	.prateleira {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 24px 0;
+	}
+	.rolo-item {
+		padding-right: 12px;
+	}
+	.rolo-item__abrir::before {
+		margin-right: -12px;
+	}
+	.rolo-item__saldo strong {
+		font-size: 24px;
+	}
+	.periodo {
+		padding: 12px 12px 18px;
+	}
+	.periodo > :not(.periodo__abas) {
+		margin-inline: 6px;
+	}
+	.periodo__total strong {
+		font-size: 34px;
+	}
+	.segmentos > a,
+	.segmentos > button,
+	.crt-visao-item {
+		min-height: 40px;
+		padding: 0 10px;
+	}
+	/* no dedo: as ações pequenas crescem, e os avisos do rolo também */
+	.acao--miuda,
+	.acao--capsula {
+		min-height: 42px;
+		padding: 0 14px;
+		font-size: 13.5px;
+	}
+	.acao--icone.acao--miuda {
+		width: 42px;
+		padding: 0;
+	}
+	.aviso {
+		min-height: 34px;
+		padding: 4px 11px 4px 9px;
+		font-size: 13px;
+	}
+	.posicoes span {
+		width: 46px;
+		height: 44px;
+	}
+	.balao__acoes .acao {
+		flex: 1 1 auto;
+		min-height: 46px;
+	}
+	.balao__acoes form {
+		display: flex;
+		flex: 1 1 auto;
+	}
+	/* o texto continua existindo para o leitor de tela; na tela fica o ícone */
+	.texto-largo {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		clip-path: inset(50%);
+		overflow: hidden;
+		white-space: nowrap;
+	}
+	.topo {
+		gap: 6px 14px;
+	}
+	.topo > h1 {
+		flex: 1;
+	}
+	.topo--peca > h1 {
+		flex: 1 1 100%;
+	}
+	.topo--peca .topo__acoes {
+		margin-left: auto;
+	}
+	.topo > .topo__dado {
+		order: 3;
+		flex: 1 1 100%;
+	}
+	.topo__acoes {
+		margin-left: 0;
+	}
+	.crt-visao-item {
+		min-width: 44px;
+	}
+	.pecas-grade {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 24px 12px;
+	}
+	.peca-cartao__figura {
+		border-radius: 16px;
+	}
+	.peca-cartao__nome {
+		font-size: 14.5px;
+	}
+	.col-larga {
+		display: none;
+	}
+	.linha-estreita {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 2px 10px;
+		margin-top: 3px;
+	}
+	.linha-estreita .fio-chip,
+	.linha-estreita .marca {
+		font-size: 13px;
+	}
+	.impressoes .crt-rolagem table {
+		min-width: 0;
+	}
+	.impressoes td {
+		padding: 10px 6px;
+	}
+	.reclassificar .crt-acoes > * {
+		flex: 1 1 100%;
+	}
+	/* a máquina vira um selo pequeno; os encaixes ocupam a largura, dois a dois */
+	.na-impressora {
+		grid-template-columns: 64px minmax(0, 1fr);
+		gap: 12px;
+		padding: 14px 14px 16px;
+	}
+	.na-impressora__maquina {
+		width: 64px;
+	}
+	.na-impressora__corpo {
+		display: contents;
+	}
+	.na-impressora .encaixes {
+		grid-column: 1 / -1;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.encaixe {
+		min-height: 150px;
+	}
+	.faixa .busca {
+		flex: 1 1 100%;
+		margin-left: 0;
+	}
+	.rolo-detalhe {
+		padding: 12px 16px 20px;
+	}
+	.rolo-detalhe__cabeca {
+		grid-template-columns: 112px minmax(0, 1fr);
+		gap: 14px;
+	}
+	.rolo-detalhe__saldo strong {
+		font-size: 30px;
+	}
+	.aviso-faixa {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+	.aviso-faixa > :last-child:not(p) {
+		grid-column: 1 / -1;
+		justify-self: start;
+	}
+	.requisitos li > .acao {
+		margin-left: 0;
+	}
+	.maquina {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.maquina__figura {
+		width: min(230px, 62%);
+		margin-inline: auto;
+	}
+	.maquina__horas strong {
+		font-size: 32px;
+	}
+	.maquina .fatos {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.cadastro-passos button {
+		flex-direction: column;
+		gap: 3px;
+		min-height: 54px;
+		font-size: 12px;
+	}
+	.cadastro-marcas {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.cadastro-produtos,
+	.cadastro-cores {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.cadastro-dialogo > :not(header) {
+		margin: 0 12px 12px;
+	}
+	.peca {
+		gap: 20px;
+	}
+	.peca__figura {
+		border-radius: 22px;
+	}
+	.registro__dupla {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.custo__total strong {
+		font-size: 36px;
+	}
+	.custo__partes--recibo li {
+		grid-template-columns: 20px minmax(84px, 110px) minmax(0, 1fr) auto;
+	}
+	.custo__partes--recibo li small {
+		display: block;
+		margin-left: 0;
+	}
+	.recibo {
+		gap: 22px;
+	}
+	.recibo__topo h2 {
+		font-size: 26px;
+	}
+	.recibo__rolo-bloco {
+		grid-template-columns: 132px minmax(0, 1fr);
+		gap: 16px;
+	}
+	.recibo__saldo span.num {
+		font-size: 32px;
+	}
+	.recibo__acoes {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.recibo__acoes > .acao {
+		padding-inline: 10px;
+	}
+	.recibo__acoes > .acao:first-child,
+	.recibo__acoes > .acao:last-child {
+		grid-column: 1 / -1;
+	}
+	.custo__partes li {
+		grid-template-columns: 20px minmax(72px, 96px) minmax(0, 1fr) auto 34px;
+		gap: 8px;
+		font-size: 14px;
+	}
+	.peca__rolo .rolo-fig {
+		width: 68px;
+	}
+	.peca__rolo-nome {
+		font-size: 16px;
+	}
+	.fatos {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+/* troca de tela: o palco esmaece rápido e a doca não se mexe (ver `+layout.svelte`) */
+@media (prefers-reduced-motion: no-preference) {
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 140ms;
+	}
+	.doca {
+		view-transition-name: doca;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+@media print {
+	.doca,
+	.pular-conteudo {
+		display: none;
+	}
+	.app {
+		padding: 0;
+	}
+}

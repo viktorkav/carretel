@@ -1,0 +1,26 @@
+import { afterEach, expect, it, vi } from 'vitest';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+const pasta = mkdtempSync(join(tmpdir(), 'biblioteca-'));
+const item = { id: '10101', marca: 'Bambu Lab', material: 'PLA Basic', cor: 'Preto', corAlias: 'Black preto', corHex: '#000000', polimero: 'PLA', densidade: 1.26, tempBico: 220, tempMesa: 55, codigoBambu: 'GFA00' };
+const catalogo = { fonte: 'teste', licencaFonte: 'teste', commit: 'a'.repeat(40), geradoEm: '2026-09-05', itens: [item] };
+afterEach(() => { vi.unstubAllEnvs(); vi.resetModules(); });
+it('carrega complemento local e mantém seleção antiga se complemento ficar ilegível', async () => {
+ vi.stubEnv('CATALOGO_PATH', join(pasta, 'legado.json'));
+ vi.stubEnv('BIBLIOTECA_PATH', join(pasta, 'biblioteca.json'));
+ writeFileSync(join(pasta, 'legado.json'), JSON.stringify(catalogo));
+ writeFileSync(join(pasta, 'biblioteca.json'), JSON.stringify({ ...catalogo, itens: [{ ...item, id: 'ofd:elegoo:preto', marca: 'Elegoo', fonteCatalogo: 'ofd', codigoBambu: '' }] }));
+ const mod = await import('./catalogo-arquivo');
+ expect(mod.itensDaBiblioteca()).toHaveLength(2);
+ expect(mod.itemDaBiblioteca('ofd:elegoo:preto')?.marca).toBe('Elegoo');
+ writeFileSync(join(pasta, 'biblioteca.json'), '{quebrado');
+ mod.esquecerCatalogo();
+ expect(mod.itensDaBiblioteca()).toHaveLength(1);
+ expect(mod.itemDaBiblioteca('10101')?.codigoBambu).toBe('GFA00');
+ writeFileSync(join(pasta, 'biblioteca.json'), JSON.stringify({ ...catalogo, itens: [{ ...item, codigosCorBambu: {} }] }));
+ mod.esquecerCatalogo();
+ expect(mod.itensDaBiblioteca()).toHaveLength(1);
+ expect(mod.itemDaBiblioteca('10101')?.codigoBambu).toBe('GFA00');
+ rmSync(pasta, { recursive: true });
+});
